@@ -1,0 +1,241 @@
+#include <bits/stdc++.h>
+#include <poppler-document.h>
+#include <poppler-page.h>
+#include "../Headers/utility.h"
+#include "../Headers/pdf_utility.h"
+#include "../Headers/pdf_search.h"
+#define nl "\n"
+#define ll long long
+
+using namespace std;
+using namespace poppler;
+
+namespace fs = std::filesystem;
+
+struct FileInfo
+{
+    string fileName;
+    vector<pair<int, vector<string>>> results;
+};
+
+FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, int caseSensitivity)
+{
+    FileInfo FI;
+    FI.fileName = pathName;
+
+    unique_ptr<document> pdf(document::load_from_file(pathName));
+
+    if (!pdf)
+    {
+        cout << "Cannot open PDF file!" << nl;
+        return FI;
+    }
+
+    int numPages = pdf->pages();
+
+    // Iterate through all pages
+    for (int i = 0; i < numPages; i++)
+    {
+        unique_ptr<page> p(pdf->create_page(i));
+        if (!p)
+            continue;
+
+        // Get text from the page as a string
+        auto pageBytes = p->text();
+        string pageText(pageBytes.begin(), pageBytes.end());
+
+        if (caseSensitivity == 2)
+            pageText = to_lower_str(pageText);
+
+        pair<int, vector<string>> res;
+        res.first = i + 1;
+
+        string line;
+        for (auto e : pageText)
+        {
+            if (e == '\n')
+            {
+                line = trim(line);
+
+                if (line.size())
+                {
+                    if (isWord == 1)
+                    {
+                        int condition = 0;
+                        for (auto key : keywords)
+                        {
+                            if (findWord(line, key))
+                            {
+                                condition = 1;
+                                break;
+                            }
+                        }
+
+                        if (condition)
+                            res.second.push_back(line);
+                    }
+                    else
+                    {
+                        int condition = 0;
+                        for (auto key : keywords)
+                        {
+                            if (line.find(key) != string::npos)
+                            {
+                                condition = 1;
+                                break;
+                            }
+                        }
+
+                        if (condition)
+                            res.second.push_back(line);
+                    }
+                }
+
+                line.clear();
+            }
+            else
+                line.push_back(e);
+        }
+
+        // again after EOF --
+        line = trim(line);
+
+        if (line.size())
+        {
+            if (isWord == 1)
+            {
+                int condition = 0;
+                for (auto key : keywords)
+                {
+                    if (findWord(line, key))
+                    {
+                        condition = 1;
+                        break;
+                    }
+                }
+
+                if (condition)
+                    res.second.push_back(line);
+            }
+            else
+            {
+                int condition = 0;
+                for (auto key : keywords)
+                {
+                    if (line.find(key) != string::npos)
+                    {
+                        condition = 1;
+                        break;
+                    }
+                }
+
+                if (condition)
+                    res.second.push_back(line);
+            }
+        }
+
+        line.clear();
+
+        // again after EOF
+
+        if (res.second.size())
+            FI.results.push_back(res);
+    }
+
+    return FI;
+}
+
+void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keywordMode, int caseSensitivity, vector<string> keywords)
+{
+    // fs::path root = "Files";
+    vector<fs::path> pathRoots(roots.begin(), roots.end());
+
+    for (auto root : roots)
+    {
+        if (!fs::exists(root))
+        {
+            cout << "\"" << root << "\" " << "this path doesnt exist..." << nl;
+            return;
+        }
+    }
+
+    vector<FileInfo> results;
+
+    for (auto root : pathRoots)
+    {
+        if (searchDepth == 1)
+        {
+            for (const auto &entry : fs::recursive_directory_iterator(root, fs::directory_options::skip_permission_denied))
+            {
+                if (!isPDF(entry.path()))
+                    continue;
+
+                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity);
+
+                if (FI.results.size())
+                {
+                    results.push_back(FI);
+                }
+            }
+        }
+        else
+        {
+            for (const auto &entry : fs::directory_iterator(root, fs::directory_options::skip_permission_denied))
+            {
+                if (!isPDF(entry.path()))
+                    continue;
+
+                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity);
+
+                if (FI.results.size())
+                {
+                    results.push_back(FI);
+                }
+            }
+        }
+    }
+
+    vector<pair<string, int>> serials;
+
+    for (auto FI : results)
+    {
+        print_text_red(FI.fileName);
+        cout << nl;
+
+        for (auto page : FI.results)
+        {
+            cout << serials.size() + 1 << ") Page No - " << page.first << " :" << nl;
+
+            serials.push_back({FI.fileName, page.first});
+
+            for (auto line : page.second)
+            {
+                cout << "- ";
+                print_text_blue(line);
+                cout << nl;
+            }
+            cout << nl;
+        }
+        cout << nl;
+    }
+
+    if (results.size())
+    {
+        while (1)
+        {
+            int ind;
+            cout << "Which one you want to open? (0 for exit)" << nl;
+            cout << "=> ";
+            cin >> ind;
+
+            if (ind == 0)
+                break;
+            else
+            {
+                openPDF(serials[ind - 1].first, serials[ind - 1].second);
+            }
+        }
+    }
+    else
+        cout << "No results found" << nl;
+}
