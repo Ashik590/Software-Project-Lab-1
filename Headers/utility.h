@@ -9,6 +9,8 @@ void print_text_yellow(string s);
 string trim(string s);
 string to_lower_str(string s);
 int menu_bar(string head, vector<string> options);
-bool findWord(string line, string keyword);
+vector<int> findWord(string line, string keyword);
+vector<int> getLPS(string &pattern);
+vector<int> find_KMP(string &str, string &pattern);
 
 #endif

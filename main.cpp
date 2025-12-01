@@ -5,6 +5,9 @@ using namespace std;
 #define nl "\n"
 #define ll long long
 
+// Compilation command
+// g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp`
+
 int main()
 {
     int mode;
@@ -22,7 +25,7 @@ int main()
         // cin.ignore();
         // getline(cin, keywords[0]);
         // vector<string> s = {"Files"};
-        // pdf_search_func(s, 2, 2, 1, 1, keywords);
+        // pdf_search_func(s, 2, 1, 1, 1, keywords);
         // Testing --
 
         vector<string> roots;
@@ -98,7 +101,7 @@ int main()
 
         for (auto &k : keywords)
             k = trim(k);
-
+            
         int caseSensitivity;
         vector<string> caseSensitivity_options = {
             "Case Sensitive",

@@ -198,17 +198,23 @@ int menu_bar(string head, vector<string> options)
     return n;
 }
 
-bool findWord(string line, string keyword)
+bool isLetter(char c)
 {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-';
+}
+
+vector<int> findWord(string line, string keyword)
+{
+    vector<int> pos;
     bool read = 1;
-    bool condition = 0;
     int ind = 0;
     for (int i = 0; i < line.size(); i++)
     {
-        if (!(line[i] >= 65 && line[i] <= 90) && !(line[i] >= 97 && line[i] <= 122))
+        if (!isLetter(line[i]))
         {
             if (ind == keyword.size() && read)
-                condition = 1;
+                pos.push_back(i - ind);
+
             read = 1;
             ind = 0;
         }
@@ -217,8 +223,73 @@ bool findWord(string line, string keyword)
         else
             read = 0;
     }
-    if (ind == keyword.size() && read)
-        condition = 1;
 
-    return condition;
+    if (ind == keyword.size() && read)
+        pos.push_back(line.size() - ind);
+
+    return pos;
+}
+
+vector<int> getLPS(string &pattern)
+{
+    int n = pattern.size();
+    vector<int> LPS(n);
+
+    int i = 1;
+    LPS[0] = 0;
+    int len = 0;
+
+    while (i < n)
+    {
+        if (pattern[i] == pattern[len])
+        {
+            LPS[i++] = ++len;
+        }
+        else
+        {
+            if (len == 0)
+                LPS[i++] = 0;
+            else
+                len = LPS[len - 1];
+        }
+    }
+
+    return LPS;
+}
+
+vector<int> find_KMP(string &str, string &pattern)
+{
+    vector<int> findings;
+
+    int j = 0;
+    int i = 0;
+
+    int n = str.size();
+    int m = pattern.size();
+
+    vector<int> LPS = getLPS(pattern);
+
+    while (i < n)
+    {
+        if (pattern[j] == str[i])
+        {
+            i++;
+            j++;
+        }
+
+        if (j == m)
+        { // found one
+            findings.push_back(i - j);
+            j = LPS[j - 1];
+        }
+        else if (i < n && pattern[j] != str[i])
+        {
+            if (j > 0)
+                j = LPS[j - 1];
+            else
+                i++;
+        }
+    }
+
+    return findings;
 }

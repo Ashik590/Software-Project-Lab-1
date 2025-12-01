@@ -5,8 +5,13 @@ using namespace std;
 
 int main()
 {
-    string line = "Muhammad Mohar Ali argues that the impacts of Sufism in";
-    // argues that the impacts of Sufism in
-    cout << (line.find("Muhammad Mohar Ali argues that the impacts of Sufism in") != string::npos) << nl;
+    vector<string> v = {"hel", "helloo"};
+    sort(v.begin(), v.end());
+
+    for (auto e : v)
+    {
+        cout << e << ' ';
+    }
+    cout << nl;
     return 0;
 }

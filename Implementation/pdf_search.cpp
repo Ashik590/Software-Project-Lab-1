@@ -50,7 +50,11 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
         pair<int, vector<string>> res;
         res.first = i + 1;
 
+        // Formatting the text content into a good shape
         string line;
+        vector<string> lines;
+        string pageContent;
+
         for (auto e : pageText)
         {
             if (e == '\n')
@@ -59,36 +63,10 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
 
                 if (line.size())
                 {
-                    if (isWord == 1)
-                    {
-                        int condition = 0;
-                        for (auto key : keywords)
-                        {
-                            if (findWord(line, key))
-                            {
-                                condition = 1;
-                                break;
-                            }
-                        }
-
-                        if (condition)
-                            res.second.push_back(line);
-                    }
-                    else
-                    {
-                        int condition = 0;
-                        for (auto key : keywords)
-                        {
-                            if (line.find(key) != string::npos)
-                            {
-                                condition = 1;
-                                break;
-                            }
-                        }
-
-                        if (condition)
-                            res.second.push_back(line);
-                    }
+                    if (line.back() != '-')
+                        line += " ";
+                    lines.push_back(line);
+                    pageContent += line;
                 }
 
                 line.clear();
@@ -96,47 +74,62 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
             else
                 line.push_back(e);
         }
-
-        // again after EOF --
-        line = trim(line);
-
         if (line.size())
         {
-            if (isWord == 1)
-            {
-                int condition = 0;
-                for (auto key : keywords)
-                {
-                    if (findWord(line, key))
-                    {
-                        condition = 1;
-                        break;
-                    }
-                }
+            if (line.back() != '-') // A line will be added of a space unless it has '-' in last
+                line += " ";
+            lines.push_back(line);
+            line.clear();
+        }
 
-                if (condition)
-                    res.second.push_back(line);
+        map<int, int> lineNumberOfChars; // Which character belongs to which line
+        int currentCharNum = 1;
+
+        for (int i_line = 0; i_line < lines.size(); i_line++)
+        {
+            for (auto ch : lines[i_line])
+                lineNumberOfChars[currentCharNum++] = i_line + 1;
+        }
+
+        set<int> found_line_nums; // Resulting line numbers
+        if (isWord == 1)
+        {
+            for (auto key : keywords)
+            {
+                vector<int> pos = findWord(pageContent, key);
+
+                for (auto position : pos)
+                {
+                    int lineNumber = lineNumberOfChars[position + 1];
+                    int extraLine = lineNumberOfChars[position + key.size()];
+
+                    while (lineNumber <= extraLine)
+                        found_line_nums.insert(lineNumber++);
+                }
             }
-            else
+        }
+        else // May not be a word
+        {
+            for (auto key : keywords)
             {
-                int condition = 0;
-                for (auto key : keywords)
-                {
-                    if (line.find(key) != string::npos)
-                    {
-                        condition = 1;
-                        break;
-                    }
-                }
+                vector<int> pos = find_KMP(pageContent, key);
 
-                if (condition)
-                    res.second.push_back(line);
+                for (auto position : pos)
+                {
+                    int lineNumber = lineNumberOfChars[position + 1];
+                    int extraLine = lineNumberOfChars[position + key.size()];
+
+                    while (lineNumber <= extraLine)
+                        found_line_nums.insert(lineNumber++);
+                }
             }
         }
 
-        line.clear();
-
-        // again after EOF
+        for (auto i_f_line = found_line_nums.begin(); i_f_line != found_line_nums.end(); i_f_line++)
+        {
+            int indexOfLine = *i_f_line;
+            res.second.push_back("(" + to_string(indexOfLine) + "/" + to_string(lines.size()) + ") " + lines[indexOfLine - 1]);
+        }
 
         if (res.second.size())
             FI.results.push_back(res);
