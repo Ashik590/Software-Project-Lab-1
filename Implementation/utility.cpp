@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include "../Headers/utility.h"
+#include "../Headers/levenshtein_distance.h"
 using namespace std;
 #define nl "\n"
 
@@ -292,4 +293,58 @@ vector<int> find_KMP(string &str, string &pattern)
     }
 
     return findings;
+}
+
+pair<vector<int>, set<string>> findWordOrGetSug(string &str, string &keyword)
+{
+    vector<int> pos;
+    bool read = 1;
+    int ind = 0;
+
+    string currentWord;
+    set<string> sugStrs;
+
+    for (int i = 0; i < str.size(); i++)
+    {
+        if (!isLetter(str[i]))
+        {
+            if (ind == keyword.size() && read)
+                pos.push_back(i - ind);
+            else if (ind > 0) // First character has to be matched
+            {
+                int minEdit = lvnstn_dis(currentWord, keyword);
+
+                if (minEdit < max(keyword.size(), currentWord.size()) / 2)
+                    sugStrs.insert(currentWord);
+            }
+
+            currentWord = "";
+            read = 1;
+            ind = 0;
+        }
+        else if (read && ind <= keyword.size() && str[i] == keyword[ind])
+        {
+            ind++;
+            currentWord.push_back(str[i]);
+        }
+        else
+        {
+            read = 0;
+            currentWord.push_back(str[i]);
+        }
+    }
+
+    if (ind == keyword.size() && read)
+        pos.push_back(str.size() - ind);
+    else
+    {
+        int minEdit = lvnstn_dis(currentWord, keyword);
+
+        if (minEdit <= max(keyword.size(), currentWord.size()) / 2)
+            sugStrs.insert(currentWord);
+    }
+
+    pair<vector<int>, set<string>> returnVal = {pos, sugStrs};
+
+    return returnVal;
 }

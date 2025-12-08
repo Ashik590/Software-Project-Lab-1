@@ -72,6 +72,16 @@ int main()
 
         isWord = menu_bar("", isWord_options);
 
+        bool isDeep = 0;
+        if (isWord == 1)
+        {
+            vector<string> isDeep_options = {
+                "Quick Search",
+                "Deep Search (With Suggestion)"};
+
+            isDeep = menu_bar("Search Level", isDeep_options) - 1;
+        }
+
         int keywordMode;
         vector<string> keywordMode_options = {
             "Single Keyword Search",
@@ -101,7 +111,7 @@ int main()
 
         for (auto &k : keywords)
             k = trim(k);
-            
+
         int caseSensitivity;
         vector<string> caseSensitivity_options = {
             "Case Sensitive",
@@ -115,7 +125,7 @@ int main()
                 k = to_lower_str(k);
         }
 
-        pdf_search_func(roots, searchDepth, isWord, keywordMode, caseSensitivity, keywords);
+        pdf_search_func(roots, searchDepth, isWord, keywordMode, caseSensitivity, keywords, isDeep);
     }
     else
     {

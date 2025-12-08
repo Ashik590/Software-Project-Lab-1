@@ -12,13 +12,20 @@ using namespace poppler;
 
 namespace fs = std::filesystem;
 
+struct pageResult
+{
+    int pageNumber;
+    vector<string> findings;
+    set<string> suggestions;
+};
+
 struct FileInfo
 {
     string fileName;
-    vector<pair<int, vector<string>>> results;
+    vector<pageResult> results;
 };
 
-FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, int caseSensitivity)
+FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, int caseSensitivity, bool isDeep)
 {
     FileInfo FI;
     FI.fileName = pathName;
@@ -47,8 +54,8 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
         if (caseSensitivity == 2)
             pageText = to_lower_str(pageText);
 
-        pair<int, vector<string>> res;
-        res.first = i + 1;
+        pageResult res;
+        res.pageNumber = i + 1;
 
         // Formatting the text content into a good shape
         string line;
@@ -96,8 +103,20 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
         {
             for (auto key : keywords)
             {
-                vector<int> pos = findWord(pageContent, key);
+                vector<int> pos;
+                if (isDeep)
+                {
+                    pair<vector<int>, set<string>> deepResult = findWordOrGetSug(pageContent, key);                            
 
+                    pos = deepResult.first;
+
+                    for (auto sg: deepResult.second)
+                        res.suggestions.insert(sg);
+                }
+                else
+                {
+                    pos = findWord(pageContent, key);
+                }
                 for (auto position : pos)
                 {
                     int lineNumber = lineNumberOfChars[position + 1];
@@ -128,17 +147,17 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
         for (auto i_f_line = found_line_nums.begin(); i_f_line != found_line_nums.end(); i_f_line++)
         {
             int indexOfLine = *i_f_line;
-            res.second.push_back("(" + to_string(indexOfLine) + "/" + to_string(lines.size()) + ") " + lines[indexOfLine - 1]);
+            res.findings.push_back("(" + to_string(indexOfLine) + "/" + to_string(lines.size()) + ") " + lines[indexOfLine - 1]);
         }
 
-        if (res.second.size())
+        if (res.findings.size() || res.suggestions.size())
             FI.results.push_back(res);
     }
 
     return FI;
 }
 
-void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keywordMode, int caseSensitivity, vector<string> keywords)
+void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keywordMode, int caseSensitivity, vector<string> keywords, bool isDeep)
 {
     // fs::path root = "Files";
     vector<fs::path> pathRoots(roots.begin(), roots.end());
@@ -163,7 +182,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 if (!isPDF(entry.path()))
                     continue;
 
-                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity);
+                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep);
 
                 if (FI.results.size())
                 {
@@ -178,7 +197,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 if (!isPDF(entry.path()))
                     continue;
 
-                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity);
+                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep);
 
                 if (FI.results.size())
                 {
@@ -197,15 +216,26 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
 
         for (auto page : FI.results)
         {
-            cout << serials.size() + 1 << ") Page No - " << page.first << " :" << nl;
+            cout << serials.size() + 1 << ") Page No - " << page.pageNumber << " :" << nl;
 
-            serials.push_back({FI.fileName, page.first});
+            serials.push_back({FI.fileName, page.pageNumber});
 
-            for (auto line : page.second)
+            for (auto line : page.findings)
             {
                 cout << "- ";
                 print_text_blue(line);
                 cout << nl;
+            }
+
+            int indSug = 0;
+            print_text_cyan("Suggestions : ");
+            for (auto k = page.suggestions.begin(); k != page.suggestions.end(); k++)
+            {
+                print_text_cyan_fade(*k);
+                if (++indSug == page.suggestions.size())
+                    cout << nl;
+                else
+                    print_text_cyan_fade(", ");
             }
             cout << nl;
         }
