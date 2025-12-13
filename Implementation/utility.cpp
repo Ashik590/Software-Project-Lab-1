@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include "../Headers/utility.h"
 #include "../Headers/levenshtein_distance.h"
+#include "../Headers/jaro_winkler.h"
 using namespace std;
 #define nl "\n"
 
@@ -295,17 +296,18 @@ vector<int> find_KMP(string &str, string &pattern)
     return findings;
 }
 
-pair<vector<int>, set<string>> findWordOrGetSug(string &str, string &keyword)
+pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &keyword)
 {
     vector<int> pos;
     bool read = 1;
     int ind = 0;
 
     string currentWord;
-    set<string> sugStrs;
+    vector<set<string>> sugStrs(2);
 
     for (int i = 0; i < str.size(); i++)
     {
+        // when facing a non-letter
         if (!isLetter(str[i]))
         {
             if (ind == keyword.size() && read)
@@ -314,8 +316,11 @@ pair<vector<int>, set<string>> findWordOrGetSug(string &str, string &keyword)
             {
                 int minEdit = lvnstn_dis(currentWord, keyword);
 
-                if (minEdit < max(keyword.size(), currentWord.size()) / 2)
-                    sugStrs.insert(currentWord);
+                if (minEdit <= max(keyword.size(), currentWord.size()) / 2)
+                    sugStrs[0].insert(currentWord);
+
+                if (jaro_winkler(currentWord, keyword))
+                    sugStrs[1].insert(currentWord);
             }
 
             currentWord = "";
@@ -324,11 +329,13 @@ pair<vector<int>, set<string>> findWordOrGetSug(string &str, string &keyword)
         }
         else if (read && ind <= keyword.size() && str[i] == keyword[ind])
         {
+            // When matching and reading
             ind++;
             currentWord.push_back(str[i]);
         }
         else
         {
+            // When it isnt matching and thus no reading
             read = 0;
             currentWord.push_back(str[i]);
         }
@@ -336,15 +343,18 @@ pair<vector<int>, set<string>> findWordOrGetSug(string &str, string &keyword)
 
     if (ind == keyword.size() && read)
         pos.push_back(str.size() - ind);
-    else
+    else if (ind > 0)
     {
         int minEdit = lvnstn_dis(currentWord, keyword);
 
         if (minEdit <= max(keyword.size(), currentWord.size()) / 2)
-            sugStrs.insert(currentWord);
+            sugStrs[0].insert(currentWord);
+
+        if (jaro_winkler(currentWord, keyword))
+            sugStrs[1].insert(currentWord);
     }
 
-    pair<vector<int>, set<string>> returnVal = {pos, sugStrs};
+    pair<vector<int>, vector<set<string>>> returnVal = {pos, sugStrs};
 
     return returnVal;
 }

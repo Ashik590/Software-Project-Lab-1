@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include "../Headers/levenshtein_distance.h"
 using namespace std;
 #define nl "\n"
 
@@ -20,7 +21,7 @@ int recurse(vector<vector<int>> &dp, string &word, string &keyword, int i, int j
     return edit;
 }
 
-int lvnstn_dis(string word, string keyword)
+int lvnstn_dis(string &word, string &keyword)
 {
     int n = word.size();
     int m = keyword.size();

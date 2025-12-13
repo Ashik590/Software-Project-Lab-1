@@ -16,7 +16,8 @@ struct pageResult
 {
     int pageNumber;
     vector<string> findings;
-    set<string> suggestions;
+    set<string> suggestions_LV;
+    set<string> suggestions_JW;
 };
 
 struct FileInfo
@@ -106,12 +107,15 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
                 vector<int> pos;
                 if (isDeep)
                 {
-                    pair<vector<int>, set<string>> deepResult = findWordOrGetSug(pageContent, key);                            
+                    pair<vector<int>, vector<set<string>>> deepResult = findWordOrGetSug(pageContent, key);
 
                     pos = deepResult.first;
 
-                    for (auto sg: deepResult.second)
-                        res.suggestions.insert(sg);
+                    for (auto sg : deepResult.second[0])
+                        res.suggestions_LV.insert(sg);
+
+                    for (auto sg : deepResult.second[1])
+                        res.suggestions_JW.insert(sg);
                 }
                 else
                 {
@@ -150,7 +154,7 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
             res.findings.push_back("(" + to_string(indexOfLine) + "/" + to_string(lines.size()) + ") " + lines[indexOfLine - 1]);
         }
 
-        if (res.findings.size() || res.suggestions.size())
+        if (res.findings.size() || res.suggestions_LV.size() || res.suggestions_JW.size())
             FI.results.push_back(res);
     }
 
@@ -227,17 +231,23 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 cout << nl;
             }
 
-            int indSug = 0;
-            print_text_cyan("Suggestions : ");
-            for (auto k = page.suggestions.begin(); k != page.suggestions.end(); k++)
+            print_text_yellow("Suggestions : ");
+            cout << nl;
+            print_text_cyan_italic("    *Levenshtein - ");
+            for (auto k = page.suggestions_LV.begin(); k != page.suggestions_LV.end(); k++)
             {
                 print_text_cyan_fade(*k);
-                if (++indSug == page.suggestions.size())
-                    cout << nl;
-                else
-                    print_text_cyan_fade(", ");
+                print_text_cyan_fade(", ");
             }
             cout << nl;
+
+            print_text_cyan_italic("    *Jaro-winkler - ");
+            for (auto k = page.suggestions_JW.begin(); k != page.suggestions_JW.end(); k++)
+            {
+                print_text_cyan_fade(*k);
+                print_text_cyan_fade(", ");
+            }
+            cout << nl << nl;
         }
         cout << nl;
     }

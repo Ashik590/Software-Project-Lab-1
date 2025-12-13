@@ -51,6 +51,6 @@ int menu_bar(string head, vector<string> options);
 vector<int> findWord(string line, string keyword);
 vector<int> getLPS(string &pattern);
 vector<int> find_KMP(string &str, string &pattern);
-pair<vector<int>, set<string>> findWordOrGetSug(string &str, string &keyword);
+pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &keyword);
 
 #endif
