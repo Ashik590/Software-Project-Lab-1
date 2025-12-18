@@ -2,6 +2,7 @@
 #include "../Headers/utility.h"
 #include "../Headers/levenshtein_distance.h"
 #include "../Headers/jaro_winkler.h"
+#include "../Headers/soundex.h"
 using namespace std;
 #define nl "\n"
 
@@ -296,14 +297,15 @@ vector<int> find_KMP(string &str, string &pattern)
     return findings;
 }
 
-pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &keyword)
+pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &keyword, string &keyCode)
 {
     vector<int> pos;
     bool read = 1;
     int ind = 0;
 
     string currentWord;
-    vector<set<string>> sugStrs(2);
+    int numOfSug = 3;
+    vector<set<string>> sugStrs(numOfSug);
 
     for (int i = 0; i < str.size(); i++)
     {
@@ -321,6 +323,9 @@ pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &key
 
                 if (jaro_winkler(currentWord, keyword))
                     sugStrs[1].insert(currentWord);
+
+                if (soundex_check(keyCode, currentWord))
+                    sugStrs[2].insert(currentWord);
             }
 
             currentWord = "";
@@ -352,6 +357,9 @@ pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &key
 
         if (jaro_winkler(currentWord, keyword))
             sugStrs[1].insert(currentWord);
+
+        if (soundex_check(keyCode, currentWord))
+            sugStrs[2].insert(currentWord);
     }
 
     pair<vector<int>, vector<set<string>>> returnVal = {pos, sugStrs};

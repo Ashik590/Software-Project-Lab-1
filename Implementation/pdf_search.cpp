@@ -4,6 +4,7 @@
 #include "../Headers/utility.h"
 #include "../Headers/pdf_utility.h"
 #include "../Headers/pdf_search.h"
+#include "../Headers/soundex.h"
 #define nl "\n"
 #define ll long long
 
@@ -18,6 +19,7 @@ struct pageResult
     vector<string> findings;
     set<string> suggestions_LV;
     set<string> suggestions_JW;
+    set<string> suggestions_SD;
 };
 
 struct FileInfo
@@ -26,7 +28,7 @@ struct FileInfo
     vector<pageResult> results;
 };
 
-FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, int caseSensitivity, bool isDeep)
+FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, int caseSensitivity, bool isDeep, vector<string> keywordCodes)
 {
     FileInfo FI;
     FI.fileName = pathName;
@@ -102,12 +104,12 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
         set<int> found_line_nums; // Resulting line numbers
         if (isWord == 1)
         {
-            for (auto key : keywords)
+            for (int key = 0; key < keywords.size(); key++)
             {
                 vector<int> pos;
                 if (isDeep)
                 {
-                    pair<vector<int>, vector<set<string>>> deepResult = findWordOrGetSug(pageContent, key);
+                    pair<vector<int>, vector<set<string>>> deepResult = findWordOrGetSug(pageContent, keywords[key], keywordCodes[key]);
 
                     pos = deepResult.first;
 
@@ -116,15 +118,18 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
 
                     for (auto sg : deepResult.second[1])
                         res.suggestions_JW.insert(sg);
+
+                    for (auto sg : deepResult.second[2])
+                        res.suggestions_SD.insert(sg);
                 }
                 else
                 {
-                    pos = findWord(pageContent, key);
+                    pos = findWord(pageContent, keywords[key]);
                 }
                 for (auto position : pos)
                 {
                     int lineNumber = lineNumberOfChars[position + 1];
-                    int extraLine = lineNumberOfChars[position + key.size()];
+                    int extraLine = lineNumberOfChars[position + keywords[key].size()];
 
                     while (lineNumber <= extraLine)
                         found_line_nums.insert(lineNumber++);
@@ -154,7 +159,7 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
             res.findings.push_back("(" + to_string(indexOfLine) + "/" + to_string(lines.size()) + ") " + lines[indexOfLine - 1]);
         }
 
-        if (res.findings.size() || res.suggestions_LV.size() || res.suggestions_JW.size())
+        if (res.findings.size() || res.suggestions_LV.size() || res.suggestions_JW.size() || res.suggestions_SD.size())
             FI.results.push_back(res);
     }
 
@@ -175,6 +180,11 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
         }
     }
 
+    vector<string> keywordCodes;
+    if (isDeep == 1)
+        for (auto key : keywords)
+            keywordCodes.push_back(soundex(key));
+
     vector<FileInfo> results;
 
     for (auto root : pathRoots)
@@ -186,7 +196,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 if (!isPDF(entry.path()))
                     continue;
 
-                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep);
+                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep, keywordCodes);
 
                 if (FI.results.size())
                 {
@@ -201,7 +211,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 if (!isPDF(entry.path()))
                     continue;
 
-                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep);
+                FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep, keywordCodes);
 
                 if (FI.results.size())
                 {
@@ -243,6 +253,14 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
 
             print_text_cyan_italic("    *Jaro-winkler - ");
             for (auto k = page.suggestions_JW.begin(); k != page.suggestions_JW.end(); k++)
+            {
+                print_text_cyan_fade(*k);
+                print_text_cyan_fade(", ");
+            }
+            cout << nl;
+
+            print_text_cyan_italic("    *Soundex - ");
+            for (auto k = page.suggestions_SD.begin(); k != page.suggestions_SD.end(); k++)
             {
                 print_text_cyan_fade(*k);
                 print_text_cyan_fade(", ");

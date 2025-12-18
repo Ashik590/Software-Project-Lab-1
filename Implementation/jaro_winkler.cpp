@@ -79,5 +79,5 @@ bool jaro_winkler(string &word, string &keyword)
 {
     double sc = jaro_winkler_implementation(word, keyword);
 
-    return (sc >= 0.8)
+    return (sc >= 0.8);
 }
