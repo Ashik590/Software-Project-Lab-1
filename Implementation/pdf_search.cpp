@@ -84,13 +84,18 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
             else
                 line.push_back(e);
         }
+        // One final refining
+        line = trim(line);
+
         if (line.size())
         {
-            if (line.back() != '-') // A line will be added of a space unless it has '-' in last
+            if (line.back() != '-')
                 line += " ";
             lines.push_back(line);
-            line.clear();
+            pageContent += line;
         }
+
+        line.clear();
 
         map<int, int> lineNumberOfChars; // Which character belongs to which line
         int currentCharNum = 1;
