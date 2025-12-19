@@ -5,6 +5,7 @@
 #include "../Headers/pdf_utility.h"
 #include "../Headers/pdf_search.h"
 #include "../Headers/soundex.h"
+#include "../Headers/cache.h"
 #define nl "\n"
 #define ll long long
 
@@ -25,6 +26,7 @@ struct pageResult
 struct FileInfo
 {
     string fileName;
+    bool cached;
     vector<pageResult> results;
 };
 
@@ -32,70 +34,92 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
 {
     FileInfo FI;
     FI.fileName = pathName;
+    int numPages;
 
-    unique_ptr<document> pdf(document::load_from_file(pathName));
+    vector<vector<string>> cacheData;
+    vector<vector<string>> dataToBeCached;
 
-    if (!pdf)
+    if (has_cache_valid_copy(pathName))
+        FI.cached = 1;
+
+    unique_ptr<document> pdf;
+    if (!FI.cached)
     {
-        cout << "Cannot open PDF file!" << nl;
-        return FI;
-    }
+        pdf.reset(document::load_from_file(pathName));
+        if (!pdf)
+        {
+            cout << "Cannot open PDF file!" << nl;
+            return FI;
+        }
 
-    int numPages = pdf->pages();
+        numPages = pdf->pages();
+    }
+    else
+    {
+        cacheData = retrieveCache(pathName);
+        numPages = cacheData.size();
+    }
 
     // Iterate through all pages
     for (int i = 0; i < numPages; i++)
     {
-        unique_ptr<page> p(pdf->create_page(i));
-        if (!p)
-            continue;
-
-        // Get text from the page as a string
-        auto pageBytes = p->text();
-        string pageText(pageBytes.begin(), pageBytes.end());
-
-        if (caseSensitivity == 2)
-            pageText = to_lower_str(pageText);
-
         pageResult res;
         res.pageNumber = i + 1;
-
-        // Formatting the text content into a good shape
-        string line;
-        vector<string> lines;
         string pageContent;
+        vector<string> lines;
 
-        for (auto e : pageText)
+        if (!FI.cached)
         {
-            if (e == '\n')
+            unique_ptr<page> p(pdf->create_page(i));
+            if (!p)
+                continue;
+
+            // Get text from the page as a string
+            auto pageBytes = p->text();
+            string pageText(pageBytes.begin(), pageBytes.end());
+
+            // Formatting the text content into a good shape
+            string line;
+
+            for (auto e : pageText)
             {
-                line = trim(line);
-
-                if (line.size())
+                if (e == '\n')
                 {
-                    if (line.back() != '-')
-                        line += " ";
-                    lines.push_back(line);
-                    pageContent += line;
+                    line = trim(line);
+
+                    if (line.size())
+                    {
+                        if (line.back() != '-')
+                            line += " ";
+                        lines.push_back(line);
+                    }
+
+                    line.clear();
                 }
-
-                line.clear();
+                else
+                    line.push_back(e);
             }
-            else
-                line.push_back(e);
-        }
-        // One final refining
-        line = trim(line);
+            // One final refining
+            line = trim(line);
+            if (line.size())
+            {
+                if (line.back() != '-')
+                    line += " ";
+                lines.push_back(line);
+            }
+            line.clear();
 
-        if (line.size())
-        {
-            if (line.back() != '-')
-                line += " ";
-            lines.push_back(line);
+            dataToBeCached.push_back(lines);
+        }
+        else
+            lines = cacheData[i];
+
+        // Filling out the pageContent
+        for (auto line : lines)
             pageContent += line;
-        }
 
-        line.clear();
+        if (caseSensitivity == 2)
+            pageContent = to_lower_str(pageContent);
 
         map<int, int> lineNumberOfChars; // Which character belongs to which line
         int currentCharNum = 1;
@@ -168,6 +192,9 @@ FileInfo searchKEYWORD(fs::path pathName, vector<string> keywords, int isWord, i
             FI.results.push_back(res);
     }
 
+    if (!FI.cached)
+        insertCache(pathName, dataToBeCached);
+
     return FI;
 }
 
@@ -176,11 +203,11 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
     // fs::path root = "Files";
     vector<fs::path> pathRoots(roots.begin(), roots.end());
 
-    for (auto root : roots)
+    for (auto root : pathRoots)
     {
         if (!fs::exists(root))
         {
-            cout << "\"" << root << "\" " << "this path doesnt exist..." << nl;
+            cout << "" << root << " this path doesnt exist..." << nl;
             return;
         }
     }
@@ -204,9 +231,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep, keywordCodes);
 
                 if (FI.results.size())
-                {
                     results.push_back(FI);
-                }
             }
         }
         else
@@ -219,9 +244,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 FileInfo FI = searchKEYWORD(entry.path(), keywords, isWord, caseSensitivity, isDeep, keywordCodes);
 
                 if (FI.results.size())
-                {
                     results.push_back(FI);
-                }
             }
         }
     }
@@ -231,6 +254,8 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
     for (auto FI : results)
     {
         print_text_red(FI.fileName);
+        if (FI.cached)
+            print_text_red_fade(" (cached)");
         cout << nl;
 
         for (auto page : FI.results)
@@ -246,31 +271,35 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
                 cout << nl;
             }
 
-            print_text_yellow("Suggestions : ");
-            cout << nl;
-            print_text_cyan_italic("    *Levenshtein - ");
-            for (auto k = page.suggestions_LV.begin(); k != page.suggestions_LV.end(); k++)
+            if (isDeep)
             {
-                print_text_cyan_fade(*k);
-                print_text_cyan_fade(", ");
-            }
-            cout << nl;
+                print_text_yellow("Suggestions : ");
+                cout << nl;
+                print_text_cyan_italic("    *Levenshtein - ");
+                for (auto k = page.suggestions_LV.begin(); k != page.suggestions_LV.end(); k++)
+                {
+                    print_text_cyan_fade(*k);
+                    print_text_cyan_fade(", ");
+                }
+                cout << nl;
 
-            print_text_cyan_italic("    *Jaro-winkler - ");
-            for (auto k = page.suggestions_JW.begin(); k != page.suggestions_JW.end(); k++)
-            {
-                print_text_cyan_fade(*k);
-                print_text_cyan_fade(", ");
+                print_text_cyan_italic("    *Jaro-winkler - ");
+                for (auto k = page.suggestions_JW.begin(); k != page.suggestions_JW.end(); k++)
+                {
+                    print_text_cyan_fade(*k);
+                    print_text_cyan_fade(", ");
+                }
+                cout << nl;
+
+                print_text_cyan_italic("    *Soundex - ");
+                for (auto k = page.suggestions_SD.begin(); k != page.suggestions_SD.end(); k++)
+                {
+                    print_text_cyan_fade(*k);
+                    print_text_cyan_fade(", ");
+                }
+                cout << nl;
             }
             cout << nl;
-
-            print_text_cyan_italic("    *Soundex - ");
-            for (auto k = page.suggestions_SD.begin(); k != page.suggestions_SD.end(); k++)
-            {
-                print_text_cyan_fade(*k);
-                print_text_cyan_fade(", ");
-            }
-            cout << nl << nl;
         }
         cout << nl;
     }

@@ -5,8 +5,11 @@ using namespace std;
 #define nl "\n"
 #define ll long long
 
+// Documentation
 // Compilation command
 // g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp`
+// '@' for updating cache directory
+// '#' for clearing cache directory
 
 int main()
 {
@@ -54,7 +57,8 @@ int main()
             {
                 string root;
                 cout << i + 1 << " - ";
-                cin >> root;
+                cin.ignore();
+                getline(cin, root);
                 roots.push_back(root);
             }
         }

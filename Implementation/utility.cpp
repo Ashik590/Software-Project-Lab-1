@@ -3,7 +3,10 @@
 #include "../Headers/levenshtein_distance.h"
 #include "../Headers/jaro_winkler.h"
 #include "../Headers/soundex.h"
+#include "../Headers/cache.h"
+
 using namespace std;
+namespace fs = std::filesystem;
 #define nl "\n"
 
 // Blues
@@ -187,6 +190,20 @@ int menu_bar(string head, vector<string> options)
 
         print_text_yellow_fade("=> ");
         cin >> n;
+
+        /*-- cache update and delete code --*/
+        if (n == '#')
+        {
+            clearCache();
+            continue;
+        }
+        else if (n == '@')
+        {
+            updateCache();
+            continue;
+        }
+        /*-- cache update and delete code --*/
+
         n -= '0';
 
         if (n > 0 && n <= options.size())
@@ -365,4 +382,38 @@ pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &key
     pair<vector<int>, vector<set<string>>> returnVal = {pos, sugStrs};
 
     return returnVal;
+}
+
+time_t convert_to_seconds_since_epoch(fs::file_time_type fileTime)
+{
+    // Convert filesystem time to system_clock time
+    auto sctp = chrono::time_point_cast<chrono::system_clock::duration>(
+        fileTime - fs::file_time_type::clock::now() + chrono::system_clock::now());
+
+    // Convert to seconds since epoch
+    time_t seconds = chrono::system_clock::to_time_t(sctp);
+
+    return seconds;
+}
+
+long long string_to_long_long(string str)
+{
+    if (str.empty())
+        throw invalid_argument("String is empty");
+
+    if (str.size() > 18)
+        throw invalid_argument("String is too large");
+
+    long long num = 0;
+
+    for (auto e : str)
+    {
+        if (e < '0' || e > '9')
+            throw invalid_argument("invalid string");
+
+        num *= 10;
+        num += e - '0';
+    }
+
+    return num;
 }

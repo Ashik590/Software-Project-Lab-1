@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
+namespace fs = std::filesystem;
 #ifndef UTILITY_H
 #define UTILITY_H
 
@@ -52,5 +53,8 @@ vector<int> findWord(string line, string keyword);
 vector<int> getLPS(string &pattern);
 vector<int> find_KMP(string &str, string &pattern);
 pair<vector<int>, vector<set<string>>> findWordOrGetSug(string &str, string &keyword, string &keyCode);
+time_t convert_to_seconds_since_epoch(fs::file_time_type lastModifiedTime);
+long long string_to_long_long(string str);
+
 
 #endif
