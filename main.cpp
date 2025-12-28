@@ -1,15 +1,17 @@
-#include <bits/stdc++.h>
 #include "./Headers/pdf_search.h"
 #include "./Headers/utility.h"
+#include "Headers/skinNonSkin.h"
 using namespace std;
 #define nl "\n"
 #define ll long long
 
-// Documentation
-// Compilation command
-// g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp`
-// '@' for updating cache directory
-// '#' for clearing cache directory
+/*
+Documentation
+Compilation command
+g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp`
+'@' for updating cache directory
+'#' for clearing cache directory
+*/
 
 int main()
 {
@@ -133,7 +135,19 @@ int main()
     }
     else
     {
-        cout << "Not Available Right Now" << nl;
+        cout << "Enter root => ";
+        string root;
+        cin.ignore();
+        getline(cin, root);
+
+        bool isRecursive;
+        vector<string> keywordMode_options = {
+            "Without sub-directories",
+            "With sub-directories"};
+
+        isRecursive = menu_bar("Recursivity", keywordMode_options) - 1;
+
+        searchSkin(root, isRecursive);
     }
 
     return 0;

@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <filesystem>
+#include <string>
+#include <vector>
+#include <fstream>
 using namespace std;
 #ifndef CACHE_H
 #define CACHE_H

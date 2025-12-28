@@ -1,4 +1,8 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <filesystem>
+#include <map>
 using namespace std;
 #ifndef PDF_UTILITY_H
 #define PDF_UTILITY_H

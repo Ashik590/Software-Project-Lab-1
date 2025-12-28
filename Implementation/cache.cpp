@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include "../Headers/cache.h"
 #include "../Headers/utility.h"
 using namespace std;
@@ -116,8 +115,9 @@ void clearCache()
 
     uintmax_t count = 0;
 
-    for (const auto &entry : fs::directory_iterator(cacheRoot, fs::directory_options::skip_permission_denied))
-        count = fs::remove_all(entry.path());
+    if (fs::exists(cacheRoot))
+        for (const auto &entry : fs::directory_iterator(cacheRoot, fs::directory_options::skip_permission_denied))
+            count = fs::remove_all(entry.path());
 
     cout << "Deleted total '" << count << "' caches." << nl;
 }
@@ -128,58 +128,59 @@ void updateCache()
 
     uintmax_t count = 0;
 
-    for (fs::recursive_directory_iterator it(cacheRoot, fs::directory_options::skip_permission_denied), end; it != end; ++it)
-    {
-        auto entry = *it;
-
-        if (entry.path().extension() != ".txt")
+    if (fs::exists(cacheRoot))
+        for (fs::recursive_directory_iterator it(cacheRoot, fs::directory_options::skip_permission_denied), end; it != end; ++it)
         {
-            // checking if the original directory exists
-            string entryPath_str = entry.path();
-            entryPath_str.erase(0, 5);
-            fs::path og_path = entryPath_str;
+            auto entry = *it;
 
-            if (!fs::exists(og_path))
+            if (entry.path().extension() != ".txt")
             {
-                count += remove_all(entry.path());
-                it.disable_recursion_pending();
+                // checking if the original directory exists
+                string entryPath_str = entry.path();
+                entryPath_str.erase(0, 5);
+                fs::path og_path = entryPath_str;
+
+                if (!fs::exists(og_path))
+                {
+                    count += remove_all(entry.path());
+                    it.disable_recursion_pending();
+                }
             }
-        }
-        else
-        {
-            // checking if the original file modified
-
-            // getting corresponding original path
-            string entryPath_str = entry.path();
-            string temp_og_path = entryPath_str.substr(5, entryPath_str.size() - 8);
-            temp_og_path += "pdf";
-            fs::path og_path = temp_og_path;
-
-            // getting last modification time stored in the cache
-            ifstream cacheFile(entry.path());
-            string last_modified_record_str;
-            getline(cacheFile, last_modified_record_str);
-            cacheFile.close();
-
-            time_t last_modified_record = string_to_long_long(last_modified_record_str);
-
-            if (fs::exists(og_path))
+            else
             {
-                time_t last_modified_og = convert_to_seconds_since_epoch(fs::last_write_time(og_path));
+                // checking if the original file modified
 
-                if (last_modified_og != last_modified_record)
+                // getting corresponding original path
+                string entryPath_str = entry.path();
+                string temp_og_path = entryPath_str.substr(5, entryPath_str.size() - 8);
+                temp_og_path += "pdf";
+                fs::path og_path = temp_og_path;
+
+                // getting last modification time stored in the cache
+                ifstream cacheFile(entry.path());
+                string last_modified_record_str;
+                getline(cacheFile, last_modified_record_str);
+                cacheFile.close();
+
+                time_t last_modified_record = string_to_long_long(last_modified_record_str);
+
+                if (fs::exists(og_path))
+                {
+                    time_t last_modified_og = convert_to_seconds_since_epoch(fs::last_write_time(og_path));
+
+                    if (last_modified_og != last_modified_record)
+                    {
+                        remove(entry.path());
+                        count++;
+                    }
+                }
+                else
                 {
                     remove(entry.path());
                     count++;
                 }
             }
-            else
-            {
-                remove(entry.path());
-                count++;
-            }
         }
-    }
 
     cout << "Deleted '" << count << "' caches." << nl;
 }

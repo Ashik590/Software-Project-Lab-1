@@ -1,4 +1,7 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
 using namespace std;
 #ifndef JARO_WINKLER_H
 #define JARO_WINKLER_H

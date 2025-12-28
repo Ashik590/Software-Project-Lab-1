@@ -1,9 +1,10 @@
-#include <bits/stdc++.h>
+#include <cstdlib>
 #include "../Headers/utility.h"
 #include "../Headers/levenshtein_distance.h"
 #include "../Headers/jaro_winkler.h"
 #include "../Headers/soundex.h"
 #include "../Headers/cache.h"
+#include "../Headers/skinNonSkin.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -195,11 +196,13 @@ int menu_bar(string head, vector<string> options)
         if (n == '#')
         {
             clearCache();
+            clearImageCache();
             continue;
         }
         else if (n == '@')
         {
             updateCache();
+            updateImageCache();
             continue;
         }
         /*-- cache update and delete code --*/
@@ -416,4 +419,11 @@ long long string_to_long_long(string str)
     }
 
     return num;
+}
+
+void openImage(fs::path src)
+{
+    string path = src;
+    string command = "xdg-open '" + path + "'";
+    system(command.c_str());
 }

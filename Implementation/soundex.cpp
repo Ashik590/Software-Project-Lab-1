@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include "../Headers/soundex.h"
 using namespace std;
 

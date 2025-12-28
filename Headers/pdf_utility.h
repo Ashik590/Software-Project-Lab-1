@@ -1,4 +1,7 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <filesystem>
 using namespace std;
 #ifndef PDF_SEARCH_H
 #define PDF_SEARCH_H

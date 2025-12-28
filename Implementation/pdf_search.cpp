@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include <poppler-document.h>
 #include <poppler-page.h>
 #include "../Headers/utility.h"
@@ -316,9 +315,7 @@ void pdf_search_func(vector<string> roots, int searchDepth, int isWord, int keyw
             if (ind == 0)
                 break;
             else
-            {
                 openPDF(serials[ind - 1].first, serials[ind - 1].second);
-            }
         }
     }
     else

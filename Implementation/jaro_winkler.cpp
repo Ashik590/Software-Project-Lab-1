@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include "../Headers/jaro_winkler.h"
 using namespace std;
 #define nl "\n"

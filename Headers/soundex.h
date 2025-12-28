@@ -1,4 +1,5 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <string>
 using namespace std;
 #ifndef SOUNDEX_H
 #define SOUNDEX_H

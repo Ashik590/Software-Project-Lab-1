@@ -1,0 +1,10 @@
+---LAST MODIFICATION TIME---
+------NUMBER OF PAGES-------
+------ PAGE-1 CONTENT ------
+------- BLANK SPACE --------
+------ PAGE-2 CONTENT ------
+------- BLANK SPACE --------
+.
+.
+.
+EOF
