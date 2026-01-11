@@ -6,7 +6,7 @@ namespace fs = std::filesystem;
 
 Model trainModel()
 {
-    ifstream dataset("Dataset/Skin_NonSkin.txt");
+    ifstream dataset("Dataset/data_kaggle.txt");
     Model model;
 
     if (!dataset.is_open())
@@ -44,21 +44,18 @@ Model trainModel()
         }
         ind++;
 
+        size_t colorInd = R * 256 * 256 + G * 256 + B;
         if (line[ind] == '1')
         {
             SkinRecords++;
 
-            model.B_map[B].first++;
-            model.G_map[G].first++;
-            model.R_map[R].first++;
+            model.skinMapping[colorInd]++;
         }
         else
         {
             nonSkinRecords++;
 
-            model.B_map[B].second++;
-            model.G_map[G].second++;
-            model.R_map[R].second++;
+            model.NonSkinMapping[colorInd]++;
         }
     }
 
@@ -128,19 +125,14 @@ bool isHumanSkin(int B, int G, int R, Model &model)
     double prior_probability_skin = model.skinRecords / model.totalRecords;
     double prior_probability_nonSkin = model.non_skinRecords / model.totalRecords;
 
-    double P_B_given_skin = (model.B_map[B].first + LAPLACE) / (model.skinRecords + K);
-    double P_G_given_skin = (model.G_map[G].first + LAPLACE) / (model.skinRecords + K);
-    double P_R_given_skin = (model.R_map[R].first + LAPLACE) / (model.skinRecords + K);
+    size_t colorInd = R * 256 * 256 + G * 256 + B;
+    double P_Skin_given_pixel = prior_probability_skin * (model.skinMapping[colorInd] / model.skinRecords);
 
-    double P_Skin_given_pixel = prior_probability_skin * P_B_given_skin * P_G_given_skin * P_R_given_skin;
+    double P_nonSkin_given_pixel = prior_probability_nonSkin * (model.NonSkinMapping[colorInd] / model.non_skinRecords);
 
-    double P_B_given_nonSkin = (model.B_map[B].second + LAPLACE) / (model.non_skinRecords + K);
-    double P_G_given_nonSkin = (model.G_map[G].second + LAPLACE) / (model.non_skinRecords + K);
-    double P_R_given_nonSkin = (model.R_map[R].second + LAPLACE) / (model.non_skinRecords + K);
+    double ratio = P_Skin_given_pixel / P_nonSkin_given_pixel;
 
-    double P_nonSkin_given_pixel = prior_probability_nonSkin * P_B_given_nonSkin * P_G_given_nonSkin * P_R_given_nonSkin;
-
-    return P_Skin_given_pixel >= P_nonSkin_given_pixel;
+    return ratio >= 0.4;
 }
 
 bool hasSkin(fs::path filePath, Model &model)

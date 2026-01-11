@@ -16,9 +16,8 @@ struct Model
     double skinRecords;
     double non_skinRecords;
 
-    map<int, pair<int, int>> B_map;
-    map<int, pair<int, int>> G_map;
-    map<int, pair<int, int>> R_map;
+    map<long long, int> skinMapping;
+    map<long long, int> NonSkinMapping;
 
     Model()
     {
