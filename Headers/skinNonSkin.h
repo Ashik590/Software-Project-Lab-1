@@ -12,18 +12,14 @@ namespace fs = std::filesystem;
 
 struct Model
 {
-    double totalRecords;
-    double skinRecords;
-    double non_skinRecords;
+    long double totalSkin;
+    long double totalNonSkin;
 
-    map<long long, int> skinMapping;
-    map<long long, int> NonSkinMapping;
+    vector<long double> pixelProb;
 
-    Model()
-    {
-        totalRecords = 0;
-        skinRecords = 0;
-        non_skinRecords = 0;
+    Model() : pixelProb(256 * 256 * 256){
+        totalSkin = 0;
+        totalNonSkin = 0;
     }
 };
 

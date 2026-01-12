@@ -1,12 +1,15 @@
 #include "../Headers/skinNonSkin.h"
 #include "../Headers/utility.h"
+#include <iomanip>
+#include <limits>
+#include <clocale>
 #define nl '\n'
 using namespace std;
 namespace fs = std::filesystem;
 
 Model trainModel()
 {
-    ifstream dataset("Dataset/data_kaggle.txt");
+    ifstream dataset("Dataset/data_mine.txt");
     Model model;
 
     if (!dataset.is_open())
@@ -15,55 +18,13 @@ Model trainModel()
         return model;
     }
 
-    string line;
-    int SkinRecords = 0, nonSkinRecords = 0;
+    long double x;
 
-    while (getline(dataset, line))
+    int i = 0;
+    while (dataset >> x)
     {
-        int B = 0, G = 0, R = 0;
-
-        int ind = 0;
-        while (line[ind] >= '0' && line[ind] <= '9')
-        {
-            B = B * 10 + line[ind] - '0';
-            ind++;
-        }
-        ind++;
-
-        while (line[ind] >= '0' && line[ind] <= '9')
-        {
-            G = G * 10 + line[ind] - '0';
-            ind++;
-        }
-        ind++;
-
-        while (line[ind] >= '0' && line[ind] <= '9')
-        {
-            R = R * 10 + line[ind] - '0';
-            ind++;
-        }
-        ind++;
-
-        size_t colorInd = R * 256 * 256 + G * 256 + B;
-        if (line[ind] == '1')
-        {
-            SkinRecords++;
-
-            model.skinMapping[colorInd]++;
-        }
-        else
-        {
-            nonSkinRecords++;
-
-            model.NonSkinMapping[colorInd]++;
-        }
+        model.pixelProb[i++] = x;
     }
-
-    dataset.close();
-
-    model.totalRecords = SkinRecords + nonSkinRecords;
-    model.skinRecords = SkinRecords;
-    model.non_skinRecords = nonSkinRecords;
 
     return model;
 }
@@ -115,24 +76,6 @@ bool writeBMP(fs::path filePath, int height, int width, vector<vector<Pixel>> &i
         file.write((char *)row.data(), rowPadded);
     }
     return true;
-}
-
-bool isHumanSkin(int B, int G, int R, Model &model)
-{
-    const int LAPLACE = 1;
-    const int K = 256;
-
-    double prior_probability_skin = model.skinRecords / model.totalRecords;
-    double prior_probability_nonSkin = model.non_skinRecords / model.totalRecords;
-
-    size_t colorInd = R * 256 * 256 + G * 256 + B;
-    double P_Skin_given_pixel = prior_probability_skin * (model.skinMapping[colorInd] / model.skinRecords);
-
-    double P_nonSkin_given_pixel = prior_probability_nonSkin * (model.NonSkinMapping[colorInd] / model.non_skinRecords);
-
-    double ratio = P_Skin_given_pixel / P_nonSkin_given_pixel;
-
-    return ratio >= 0.4;
 }
 
 bool hasSkin(fs::path filePath, Model &model)
@@ -208,7 +151,8 @@ bool hasSkin(fs::path filePath, Model &model)
     for (int i = 0; i < height; i++)
         for (int j = 0; j < width; j++)
         {
-            if (isHumanSkin(image[i][j].b, image[i][j].g, image[i][j].r, model))
+            long long pixel_ind = 256 * 256 * image[i][j].r + 256 * image[i][j].g + image[i][j].b;
+            if (model.pixelProb[pixel_ind] >= 0.4)
             {
                 gotSkin = 1;
                 image[i][j].b = 255;
