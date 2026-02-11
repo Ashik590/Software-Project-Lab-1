@@ -10,28 +10,40 @@ namespace fs = std::filesystem;
 #define nl "\n"
 #define ll long long
 
-const fs::path sample_image_src = "Sample";
-const fs::path output_filePath = "Dataset/data_mine.txt";
+const fs::path dataset_path = "/home/ashik/Desktop/Sem 3/Software-Project-Lab/Dataset/Sample_mask_images";
+const fs::path model_1_path = "/home/ashik/Desktop/Sem 3/Software-Project-Lab/Models/model_1.txt";
 
 /*
-    Requirements :
-    (1) Must have to be same fileName (extension name is not included) of
+    Title : Training Model using Sample Mask Images
+
+    Feature :
+
+    It trains model-1 using the dataset of raw images with proper skin
+    labelling.
+
+    Requirements for Model-1 training :
+
+    (1) There must be two directories of Images in the dataset (Who are going
+    to be used to train the model) - One will have normal images and another
+    will have the SKIN LABELLED images.
+
+    (2) Must have to be same fileName (extension name is not included) of
         a normal image in Image directory and its skin image in Skin directory.
         as well as,
             - Width, Height
-    (2) Assuming Skin Images are all pngs
+    (3) Assuming Skin Images (Labelled) are all pngs
 */
 
 int main()
 {
-    fs::path imagePath = sample_image_src / "Image";
+    fs::path imagePath = dataset_path / "Image";
 
     int width1, height1, channels1, width2, height2, channels2;
-    ofstream outputFile(output_filePath);
+    ofstream model_1_file(model_1_path);
 
-    if (!outputFile.is_open())
+    if (!model_1_file.is_open())
     {
-        cout << "ERROR : Cannot open output file for trained data..." << nl;
+        cout << "ERROR : Cannot open model-1 file for training..." << nl;
         return 1;
     }
 
@@ -44,11 +56,12 @@ int main()
         string fileName = entry.path().filename().stem();
         string corresponding_skinFileName = fileName + ".png";
 
-        fs::path corresponding_skinPath = (fs::path) "Sample/Skin" / corresponding_skinFileName;
+        fs::path corresponding_skinPath = dataset_path / "Skin" / corresponding_skinFileName;
 
         if (!fs::exists(corresponding_skinPath))
         {
             cout << "Cannot find corresponding extracted skin image for '" << entry.path() << "'" << nl;
+
             continue;
         }
 
@@ -125,10 +138,11 @@ int main()
 
         long double ratio = pixel_given_skin_arr[i] / pixel_given_nonSkin_arr[i];
 
-        outputFile << fixed << setprecision(20) << ratio << nl;
+        model_1_file << fixed << setprecision(20) << ratio << nl;
     }
 
-    outputFile.close();
+    cout << "Model-1 is trained to fight !!" << nl;
+    model_1_file.close();
 
     return 0;
 }

@@ -10,6 +10,10 @@ using namespace std;
 namespace fs = std::filesystem;
 #define nl "\n"
 
+void print_text_fading(string s)
+{
+    cout << "\033[2;30m" << s << "\033[0m";
+}
 // Blues
 void print_text_blue(string s)
 {

@@ -7,21 +7,29 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-Model trainModel()
+Model getModel(bool modelNo)
 {
-    ifstream dataset("Dataset/data_mine.txt");
+    string model_path;
+
+    if (modelNo == 0)
+        model_path = "Models/model_1.txt";
+    else if (modelNo == 1)
+        model_path = "Models/model_2.txt";
+    else
+        throw invalid_argument("Model no. is not specified appropriately.");
+
+    ifstream model_file(model_path);
     Model model;
 
-    if (!dataset.is_open())
+    if (!model_file.is_open())
     {
-        cout << "Can't open the dataset file" << nl;
-        return model;
+        throw invalid_argument("The Required Model is not trained yet.");
     }
 
     long double x;
 
     int i = 0;
-    while (dataset >> x)
+    while (model_file >> x)
     {
         model.pixelProb[i++] = x;
     }
@@ -83,7 +91,7 @@ bool hasSkin(fs::path filePath, Model &model)
     // If it has already a cache
     if (fs::exists(getExtractedSkinPath(filePath)))
     {
-        cout << "Retrieving from cache..." << nl << nl;
+        print_text_fading("Retrieving from cache...\n\n");
         return 1;
     }
 
@@ -137,14 +145,8 @@ bool hasSkin(fs::path filePath, Model &model)
 
     file.close();
 
-    cout << "BMP Loaded Successfully!" << nl;
-    cout << "Width: " << width << ", Height: " << height << nl;
-
-    // Example: print first pixel RGB
-    cout << "First pixel RGB: "
-         << (int)image[0][0].r << " "
-         << (int)image[0][0].g << " "
-         << (int)image[0][0].b << nl << nl;
+    // BMP image loaded right now
+    print_text_fading("Predicting skin segment from the Image!\n");
 
     bool gotSkin = 0;
 
@@ -192,15 +194,15 @@ fs::path getExtractedSkinPath(fs::path ogFilePath)
     return extractedSkinPath;
 }
 
-void searchSkin(fs::path root, bool isRecursive)
+void searchSkin(bool modelNo, fs::path root, bool isRecursive)
 {
     if (!fs::exists(root))
     {
         cout << "" << root << " this root path doesnt exist..." << nl;
-        return;
+        throw invalid_argument("Root directory invalid");
     }
 
-    Model model = trainModel();
+    Model model = getModel(modelNo);
     bool searchResult;
 
     vector<fs::path> foundSkinPaths;
@@ -234,20 +236,28 @@ void searchSkin(fs::path root, bool isRecursive)
     if (foundSkinPaths.size())
     {
         for (int i = 0; i < foundSkinPaths.size(); i++)
-            cout << '(' << i + 1 << ')' << " " << foundSkinPaths[i] << nl;
+        {
+            print_text_magenta_fade('(' + to_string(i + 1) + ')' + " ");
+            // cout << '(' << i + 1 << ')';
+            print_text_magenta_underline(foundSkinPaths[i]);
+            cout << nl;
+            // cout << foundSkinPaths[i] << nl;
+        }
         cout << nl;
 
         int select;
         while (1)
         {
             cout << "Which one do you want to open? (0 to exit)" << nl;
-            cout << "=> ";
+            print_text_yellow_fade("=> ");
             cin >> select;
 
             if (!select)
                 break;
 
-            cout << "Opening the " << select << "th image...." << nl;
+            print_text_blue_fade("Opening the " + to_string(select) + "th image...." + nl);
+            cout << nl;
+            // cout << "Opening the " << select << "th image...." << nl;
             openImage(getExtractedSkinPath(foundSkinPaths[select - 1]));
         }
     }

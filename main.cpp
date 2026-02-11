@@ -135,6 +135,12 @@ int main()
     }
     else
     {
+        bool modelNo;
+        vector<string> modelOptions = {
+            "Model-1 (Good for family images)",
+            "Model-2 (Good for single images)"};
+        modelNo = menu_bar("Model", modelOptions) - 1;
+
         cout << "Enter root => ";
         string root;
         cin.ignore();
@@ -147,7 +153,7 @@ int main()
 
         isRecursive = menu_bar("Recursivity", keywordMode_options) - 1;
 
-        searchSkin(root, isRecursive);
+        searchSkin(modelNo,root, isRecursive);
     }
 
     return 0;

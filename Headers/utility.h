@@ -9,6 +9,7 @@ namespace fs = std::filesystem;
 #ifndef UTILITY_H
 #define UTILITY_H
 
+void print_text_fading(string s);
 // Blues
 void print_text_blue(string s);
 void print_text_blue_bold(string s);

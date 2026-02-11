@@ -54,9 +54,8 @@ struct Pixel
     uint8_t b, g, r;
 };
 
-Model trainModel();
-bool isHumanSkin(int B, int G, int R, Model &model);
-void searchSkin(fs::path root, bool isRecursive);
+Model getModel(bool modelNo);
+void searchSkin(bool modelNo ,fs::path root, bool isRecursive);
 fs::path getExtractedSkinPath(fs::path ogFilePath);
 void clearImageCache();
 void updateImageCache();
