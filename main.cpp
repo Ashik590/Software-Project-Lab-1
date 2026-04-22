@@ -15,6 +15,11 @@ g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp`
 
 int main()
 {
+    cout << nl;
+    print_text_fading("Welcome to");
+    cout << nl;
+    print_text_magenta_bold("THE El Doˈɾaðo EXPLORER");
+    cout << nl;
     int mode;
 
     vector<string> mode_options = {
@@ -153,7 +158,7 @@ int main()
 
         isRecursive = menu_bar("Recursivity", keywordMode_options) - 1;
 
-        searchSkin(modelNo,root, isRecursive);
+        searchSkin(modelNo, root, isRecursive);
     }
 
     return 0;
