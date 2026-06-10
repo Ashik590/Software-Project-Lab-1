@@ -1,7 +1,9 @@
 test.cpp
 .vscode
-a.out
+app
 git_commands
 Models/*
 cache/*
 ExtractedSkin/*
+model1
+model2

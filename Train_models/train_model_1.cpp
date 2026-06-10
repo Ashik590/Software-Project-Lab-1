@@ -10,8 +10,8 @@ namespace fs = std::filesystem;
 #define nl "\n"
 #define ll long long
 
-const fs::path dataset_path = "/home/ashik/Desktop/Sem 3/Software-Project-Lab/Dataset/Sample_mask_images";
-const fs::path model_1_path = "/home/ashik/Desktop/Sem 3/Software-Project-Lab/Models/model_1.txt";
+const fs::path dataset_path = "Dataset/Sample_mask_images";
+const fs::path model_1_path = "Models/model_1.txt";
 
 /*
     Title : Training Model using Sample Mask Images

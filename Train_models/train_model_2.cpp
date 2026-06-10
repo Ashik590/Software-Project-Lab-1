@@ -8,8 +8,8 @@ namespace fs = std::filesystem;
 #define nl "\n"
 #define ll long long
 
-const fs::path dataset_src = "/home/ashik/Desktop/Sem 3/Software-Project-Lab/Dataset/Sample_labelled_pixels/data_kaggle.txt";
-const fs::path model_2_FilePath = "/home/ashik/Desktop/Sem 3/Software-Project-Lab/Models/model_2.txt";
+const fs::path dataset_src = "Dataset/Sample_labelled_pixels/data_kaggle.txt";
+const fs::path model_2_FilePath = "Models/model_2.txt";
 
 /*
     Title : Training Model using Sample labelled pixels dataset

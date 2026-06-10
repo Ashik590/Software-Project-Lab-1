@@ -37,12 +37,12 @@ g++ Train_models/train_model_2.cpp -o model2
 
 ### Compile the Main Application
 ```bash
-g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp` -o a
+g++ main.cpp Implementation/* `pkg-config --cflags --libs poppler-cpp` -o app
 ```
 
 ### Run the Application
 ```bash
-./a
+./app
 ```
 
 ---
