@@ -166,12 +166,6 @@ This project helped me understand how machine learning models are implemented in
 
 ---
 
-## Sample Data
-
-The `Files/` directory contains sample files and images that can be used to test the application.
-
----
-
 ## Presentation
 
 The project is fully described in the presentation slides stored in the `presentation/` directory.
