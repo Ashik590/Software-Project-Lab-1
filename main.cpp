@@ -23,8 +23,8 @@ int main()
     int mode;
 
     vector<string> mode_options = {
-        "PDF Content Search",
-        "BMP Human Skin Search"};
+        "PDF Text Retrieval",
+        "BMP Human Skin Retrieval"};
 
     mode = menu_bar((string) "Mode", mode_options);
 
@@ -40,34 +40,19 @@ int main()
 
         vector<string> roots;
 
-        int searchScope;
+        cout << "Number of roots = ";
 
-        vector<string> searchScope_options = {
-            "Whole Computer",
-            "Specify Roots"};
-        searchScope = menu_bar("Search Scope", searchScope_options);
+        int num_of_roots;
+        cin >> num_of_roots;
 
-        if (searchScope == 1)
+        cout << "Enter roots =>" << nl;
+        for (int i = 0; i < num_of_roots; i++)
         {
-            fs::path root = "/";
+            string root;
+            cout << i + 1 << " - ";
+            cin.ignore();
+            getline(cin, root);
             roots.push_back(root);
-        }
-        else
-        {
-            cout << "Number of roots = ";
-
-            int num_of_roots;
-            cin >> num_of_roots;
-
-            cout << "Enter roots =>" << nl;
-            for (int i = 0; i < num_of_roots; i++)
-            {
-                string root;
-                cout << i + 1 << " - ";
-                cin.ignore();
-                getline(cin, root);
-                roots.push_back(root);
-            }
         }
 
         int searchDepth;
@@ -96,8 +81,7 @@ int main()
         int keywordMode;
         vector<string> keywordMode_options = {
             "Single Keyword Search",
-            "Multiple Keyword Search",
-            "Multiple Keyword in Single Page Search"};
+            "Multiple Keyword Search"};
 
         keywordMode = menu_bar("Keyword Mode", keywordMode_options);
 

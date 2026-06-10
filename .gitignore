@@ -1,6 +1,7 @@
-Files
 test.cpp
 .vscode
 a.out
 git_commands
 Models/*
+cache/*
+ExtractedSkin/*
